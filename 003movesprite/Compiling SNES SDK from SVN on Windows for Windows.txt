@@ -1,0 +1,84 @@
+Compiling the SNES SDK from SVN
+Written by AndiNo in March 2010
+
+Tested on Windows XP SP2
+with SVN version 67
+
+Note: Some steps mentioned here may not be necessary to compile the SDK, however this is how I got it working so I'm sticking to this.
+
+Setting up tools and code:
+1. Install MSYS (tested with version 1.0.11)
+2. Install MinGW with GCC version 4 (!) (tested with "TDM's Experimental GCC/MinGW32 Build" version 4.4.1-tdm-2)
+ 2.1 If necessary, adjust mingw path in \msys\1.0\etc\fstab to new MinGW location.
+3. Copy SVN version of the SNES SDK in the MSYS folders (tested with \msys\1.0\local\snes-sdkrev67).
+4. Install Python (tested with Python 2.6). [only needed if you want to use the optimization -> recommended]
+
+
+Preparing the code:
+1. Change main Makefile:
+ Remove references to WLAB (won't compile and is not used in r67) and stop regeneration of config.h and config.mak if they exist already.
+
+ Change following lines:
+ SUBDIRS = wla_dx wla_dx/wlalink wla_dx/wlab tcc-65816 libs
+
+ to
+ SUBDIRS = wla_dx wla_dx/wlalink tcc-65816 libs
+
+
+ libs wla_dx snes9x wla_dx/wlalink wla_dx/wlab: dummy
+
+ to
+ libs wla_dx snes9x wla_dx/wlalink: dummy
+
+
+ tcc-65816/config.h: Makefile
+
+ to
+ tcc-65816/config.h:
+
+
+ and delete following line (if you want to use "install")
+ cp -p wla_dx/wlab/wlab $(DESTDIR)$(PREFIX)/bin/
+
+
+ Change SNES9X=1 to SNES9X=0 if you don't want to use Snes9X (I think it won't compile anyway without further changes).
+
+
+2. WLA_DX
+ Rename or delete the makefile in the wla_dx folder. Copy over the makefile.unix.65816 from wla_dx\makefiles\ and rename it to "makefile".
+
+
+3. WLALINK
+ Open wla_dx\wlalink\files.c and change the line
+ #define LIBDIR PREFIX "/lib"
+ to
+ #define LIBDIR "../lib"
+ in order to let WLALINK search in SDKfolder\lib\ when executing it from SDKfolder\bin\.
+
+
+4. TCC-65816
+ Copy the config.h and config.mak from an older SDK version to tcc-65816\ (tested with r15).
+ Replace the stdarg.h and stddef.h in tcc-65816\include\ with the corresponding files in tcc-65816\.
+
+
+5. Python
+ Add your Python install folder to your PATH environment variable so MSYS can use it.
+
+Compiling the code:
+1. Start MSYS.
+2. Enter "cd /local". From there move to your SDK folder (if you put it somewhere in "local").
+3. Enter "make" and wait.
+4. Either use "make install" (not tested)
+ or
+ copy all created .exe files and 816-opt.py to SDKfolder\bin\. Copy all .obj files from libs\ to the SDKfolder\lib\ folder. Copy all .h files from tcc-65816\include\ to SDKfolder\include\. Copy libs\hdr.asm to SDKfolder\include\.
+
+
+Compiling the game (snesc):
+1. Replace the snesc\hdr.asm with SDKfolder\include\hdr.asm.
+2. Execute the "createROM.bat" file.
+3. Open the snesc.smc in any emulator to play.
+
+Info for compiling your own game:
+If you add/delete any files to/from your game add/remove the corresponding lines in "createROM.bat".
+
+
